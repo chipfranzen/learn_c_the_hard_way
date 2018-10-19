@@ -1,3 +1,4 @@
+#include <glob.h>
 #include <stdio.h>
 #include <unistd.h>
 
@@ -29,11 +30,24 @@ int main(int argc, char *argv[])
   fp = load_log_files();
   int logfile_count = 0;
   logfile = readline(fp);
+  int matched_glob_count;
+  char *log_to_search;
 
   while (logfile[0] != '\0') {
-    search_log(logfile, argv, argc, oflag);
+    glob_t pglob;
+    glob(logfile, 0, 0, &pglob);
+    matched_glob_count = (int)pglob.gl_pathc;
+    printf("Logfile: %s, Globs matched: %d\n", logfile, matched_glob_count);
+
+    int i = 0;
+    for (i = 0; i < matched_glob_count; i++){
+      log_to_search = pglob.gl_pathv[i];
+      search_log(log_to_search, argv, argc, oflag);
+      ++logfile_count;
+    }
+
     logfile = readline(fp);
-    ++logfile_count;
+    globfree(&pglob);
   }
 
   return 0;

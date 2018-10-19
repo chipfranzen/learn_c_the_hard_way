@@ -1,3 +1,4 @@
+#include <glob.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -27,6 +28,8 @@ char *readline(FILE *fp)
   strncpy(line, line_buffer, count + 1);
   line[count + 1] = '\0';
 
+  free(line_buffer);
+
   return line;
 }
 
@@ -49,29 +52,25 @@ int or_bool_array(int *bool_array, int len_array) {
   int acc = 0;
   int i = 0;
 
-  for (i = 0; i < len_array; i++)
+  for (i = 0; i < len_array; i++){
     acc = acc || bool_array[i];
+  }
 
   return acc;
 }
 
-int and_bool_array(int *bool_array, int len_array) {
+int and_bool_array(int *bool_array, const int len_array) {
   int acc = 1;
   int i = 0;
 
-  printf("len of bool array: %d\n", len_array);
-
   for (i = 0; i < len_array; i++) {
-    printf("acc: %d, bool: %d, res: %d\n", acc, bool_array[i], acc && bool_array[i]);
     acc = acc && bool_array[i];
     }
-
-  printf("Final acc: %d\n", acc);
 
   return acc;
 }
 
-void search_log(char *logfile, char **keywords, int n_kws, int or) {
+void search_log(char *logfile, char **keywords, const int n_kws, const int or) {
   printf("Searching file %s\n", logfile);
 
   FILE *fp;
@@ -93,7 +92,6 @@ void search_log(char *logfile, char **keywords, int n_kws, int or) {
   while (logline[0] != '\0') {
     print_ln = 0;
     for (i = 1; i < n_kws; i++) {
-      printf("%s, %s\n", logline, keywords[i]);
       if (strstr(logline, keywords[i]) != NULL) {
         kw_present[i - 1] = 1;
       } else {
@@ -101,14 +99,11 @@ void search_log(char *logfile, char **keywords, int n_kws, int or) {
       }
     }
     if (or) {
-      printf("OR\n");
       print_ln = or_bool_array(kw_present, n_kws - 1);
     } else {
-      printf("AND\n");
       print_ln = and_bool_array(kw_present, n_kws - 1);
     }
     if (print_ln > 0) {
-      printf("print_ln: %d\n", print_ln);
       printf("%d \t %s\n", line_num, logline);
     }
     logline = readline(fp);
